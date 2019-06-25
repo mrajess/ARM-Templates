@@ -1,0 +1,148 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "azureMonitorWorkspaceName": {
+            "type": "string",
+            "metadata": {
+                "description": "Azure Monitor Log Analytics workspace name"
+            }
+        },
+        "azureMonitorServiceTier": {
+            "type": "string",
+            "defaultValue": "PerGB2018",
+            "allowedValues": [
+                "Premium",
+                "Unlimited",
+                "PerGB2018",
+                "Free",
+                "Standard",
+                "PerNode"
+            ],
+            "metadata": {
+                "description": "Azure Monitor Log Analytics service tier. The default and recommended value going forward is PerGB2018, which is also what Azure Security Center generated workspaces default to."
+            }
+        },
+        "azureMonitorDataRetention": {
+            "type": "int",
+            "defaultValue": 31,
+            "minValue": 7,
+            "maxValue": 730,
+            "metadata": {
+                "description": "Number of days for log data to be retained. PerGB2018 Service Tier includes 31 days of log retention. The maximum number of days is 730."
+            }
+        },
+        "location": {
+            "defaultValue": "",
+            "type": "string",
+            "allowedValues": [
+                "eastus",
+                "westus2",
+                "westcentralus",
+                "canadacentral",
+                "australiasoutheast",
+                "southeastasia",
+                "centralindia",
+                "japaneast",
+                "uksouth",
+                "westeurope"
+            ]
+        }
+    },
+    "variables": {
+        "apiVersion": {
+            "oms": "2017-03-15-preview",
+            "omssolutions": "2015-11-01-preview",
+            "automation": "2015-10-31"
+        },
+        "updates": {
+            "name": "[concat('Updates', '(', parameters('azureMonitorWorkspaceName'), ')')]",
+            "galleryName": "Updates"
+        },
+        "security": {
+            "name": "[concat('Security', '(', parameters('azureMonitorWorkspaceName'), ')')]",
+            "galleryName": "Security"
+        },
+        "automation": {
+            "name": "[concat(parameters('azureMonitorWorkspaceName'), '-', 'Automation')]"
+        }
+    },
+    "resources": [
+        {
+            "apiVersion": "[variables('apiVersion').oms]",
+            "type": "Microsoft.OperationalInsights/workspaces",
+            "name": "[parameters('azureMonitorWorkspaceName')]",
+            "location": "[parameters('location')]",
+            "properties": {
+                "sku": {
+                    "Name": "[parameters('azureMonitorServiceTier')]"
+                },
+                "retentionInDays": "[parameters('azureMonitorDataRetention')]"
+            },
+            "resources": [
+                {
+                    "apiVersion": "[variables('apiVersion').omssolutions]",
+                    "location": "[parameters('location')]",
+                    "name": "[variables('updates').name]",
+                    "type": "Microsoft.OperationsManagement/solutions",
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.OperationsManagement/solutions/', variables('updates').name)]",
+                    "dependsOn": [
+                        "[concat('Microsoft.OperationalInsights/workspaces/', parameters('azureMonitorWorkspaceName'))]"
+                    ],
+                    "properties": {
+                        "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('azureMonitorWorkspaceName'))]"
+                    },
+                    "plan": {
+                        "name": "[variables('updates').name]",
+                        "publisher": "Microsoft",
+                        "promotionCode": "",
+                        "product": "[concat('OMSGallery/', variables('updates').galleryName)]"
+                    }
+                },
+                {
+                    "apiVersion": "[variables('apiVersion').omssolutions]",
+                    "location": "[parameters('location')]",
+                    "name": "[variables('security').name]",
+                    "type": "Microsoft.OperationsManagement/solutions",
+                    "id": "[concat('/subscriptions/', subscription().subscriptionId, '/resourceGroups/', resourceGroup().name, '/providers/Microsoft.OperationsManagement/solutions/', variables('security').name)]",
+                    "dependsOn": [
+                        "[concat('Microsoft.OperationalInsights/workspaces/', parameters('azureMonitorWorkspaceName'))]"
+                    ],
+                    "properties": {
+                        "workspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces/', parameters('azureMonitorWorkspaceName'))]"
+                    },
+                    "plan": {
+                        "name": "[variables('security').name]",
+                        "publisher": "Microsoft",
+                        "promotionCode": "",
+                        "product": "[concat('OMSGallery/', variables('security').galleryName)]"
+                    }
+                }
+            ]
+        },
+        {
+            "apiVersion": "[variables('apiVersion').automation]",
+            "type": "Microsoft.Automation/automationAccounts",
+            "name": "[variables('automation').name]",
+            "location": "[if(equals(parameters('location'), 'eastus'), 'eastus2', parameters('location'))]",
+            "properties": {
+                "sku": {
+                    "name": "Basic"
+                }
+            }
+        },
+        {
+            "apiVersion": "[variables('apiVersion').omssolutions]",
+            "type": "Microsoft.OperationalInsights/workspaces/linkedServices",
+            "name": "[concat(parameters('azureMonitorWorkspaceName'), '/' , 'Automation')]",
+            "location": "[parameters('location')]",
+            "dependsOn": [
+                "[concat('Microsoft.OperationalInsights/workspaces/', parameters('azureMonitorWorkspaceName'))]",
+                "[concat('Microsoft.Automation/automationAccounts/', variables('automation').name)]"
+            ],
+            "properties": {
+                "resourceId": "[resourceId('Microsoft.Automation/automationAccounts/', variables('automation').name)]"
+            }
+        }
+    ]
+}
