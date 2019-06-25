@@ -5,7 +5,7 @@
         "azureMonitorWorkspaceName": {
             "type": "string",
             "metadata": {
-                "description": "Azure Monitor Log Analytics workspace name"
+                "description": "Azure Monitor Log Analytics workspace name."
             }
         },
         "azureMonitorServiceTier": {
