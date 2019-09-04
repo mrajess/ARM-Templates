@@ -12,11 +12,9 @@
             "type": "string",
             "defaultValue": "PerGB2018",
             "allowedValues": [
-                "Premium",
-                "Unlimited",
+                "Standalone",
                 "PerGB2018",
                 "Free",
-                "Standard",
                 "PerNode"
             ],
             "metadata": {
