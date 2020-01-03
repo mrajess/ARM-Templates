@@ -3,31 +3,31 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "userAssignedIdentityName": {
-            "defaultValue": "appgwKeyVaultIdentity",
+            "defaultValue": "appGatewayKeyVaultIdentity",
             "type": "String"
         },
         "existingKeyVaultName": {
-            "defaultValue": "TestKeyVaultAppGwMrajess",
+            "defaultValue": "yourExistingKeyVault",
             "type": "String"
         },
         "appGatewayName": {
-            "defaultValue": "AppGwKVIntegration",
+            "defaultValue": "AppGatewayKeyVaultIntegration",
             "type": "string"
         },
         "appGatewayListenerCertKeyVaultId": {
-            "defaultValue": "https://testkeyvaultappgwmrajess.vault.azure.net:443/secrets/cert1/",
+            "defaultValue": "https://yourkeyvault.vault.azure.net:443/secrets/sslcert/",
             "type": "string"
         },
         "appGatewayTrustedRootCertKeyVaultId": {
-            "defaultValue": "https://testkeyvaultappgwmrajess.vault.azure.net/secrets/trustedroot/2d6f53d0e22442f7a6e1786b61dc3183",
+            "defaultValue": "https://yourkeyvault.vault.azure.net/secrets/trustedroot/GUID",
             "type": "string"
         }
     },
     "variables": {
         "appGatewaySkuName": "Standard_v2",
         "appGatewaySkuTier": "Standard_v2",
-        "appGatewayVirtualNetworkName": "Vnet1",
-        "appGatewaySubnetName": "appgwSubnet",
+        "appGatewayVirtualNetworkName": "yourVnetName",
+        "appGatewaySubnetName": "yourSubnetName",
         "appGatewaySubnetRef": "[resourceId('Microsoft.Network/virtualNetworks/subnets', variables('appGatewayVirtualNetworkName'), variables('appGatewaySubnetName'))]"
 
     },
